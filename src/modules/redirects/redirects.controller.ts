@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Redirect, Res } from '@nestjs/common';
 import { RedirectsService } from './redirects.service';
 import { CreateShortUrlDto } from './createShortUrl.dto';
 
@@ -8,8 +8,9 @@ export class RedirectsController {
   constructor(private readonly redirectsService: RedirectsService) { }
 
   @Get(":url_shortened")
-  redirectToUrl(@Param() params: any): string {
-    return params.url_shortened;
+  @Redirect("https://nestjs.com")
+  async redirectToUrl(@Param() params: any, @Res() res): Promise<string> {
+    return res.redirect(await this.redirectsService.getOriginalUrl(params.url_shortened))
   }
 
   @Post("short_url")

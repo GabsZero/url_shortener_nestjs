@@ -6,8 +6,15 @@ export class RedirectsService {
   shortUrlLength: number = 7
 
   constructor(private prisma: PrismaService) { }
-  getHello(): string {
-    return 'Hello World!';
+
+  async getOriginalUrl(shortened_url: string): Promise<string> {
+    const redirect = await this.prisma.redirects.findFirst({
+      where: {
+        shortened_url: shortened_url
+      }
+    })
+
+    return redirect.original_url
   }
 
   async createShortUrl(url: string) {
