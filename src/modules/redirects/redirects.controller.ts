@@ -8,6 +8,12 @@ import { Response } from 'express';
 export class RedirectsController {
   constructor(private readonly redirectsService: RedirectsService) { }
 
+  @Get("/")
+  async hello(): Promise<string> {
+
+    return "hello"
+  }
+
   @Get(":url_shortened")
   async redirectToUrl(@Param() params: any, @Res() res: Response): Promise<void> {
 
