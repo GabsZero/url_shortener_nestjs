@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/infrastructure/repositories/prisma.service';
+import { PrismaService } from '../../infrastructure/repositories/prisma.service';
 import { DateTime, Duration } from "luxon";
 
 @Injectable()
