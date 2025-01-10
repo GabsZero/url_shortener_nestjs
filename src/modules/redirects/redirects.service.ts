@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/repositories/prisma.service';
 import { DateTime, Duration } from "luxon";
 import { CreateCustomShortUrlDto } from './createCustomShortUrl';
@@ -12,27 +12,23 @@ export class RedirectsService {
   async getOriginalUrl(shortened_url: string): Promise<string> {
     const redirect = await this.prisma.redirects.findFirst({
       where: {
-        shortened_url: shortened_url
+        shortened_url: shortened_url,
+        expire_at: {
+          gte: DateTime.local()
+        }
       }
     })
 
-    console.log(redirect.original_url)
-    if (redirect) return redirect.original_url
+    if (!redirect) {
+      throw new NotFoundException("Short url not found")
+    }
 
-    return "http://mail.google.com"
+    return redirect.original_url
   }
 
   async createShortUrl(url: string): Promise<string> {
-    let shortened_url = this.createRandomUrl(this.shortUrlLength)
+    let shortened_url = ""
     let exist: boolean = true
-
-    const urlExists = await this.prisma.redirects.count({
-      where: {
-        original_url: url
-      }
-    }) > 0
-
-    if (urlExists) throw new BadRequestException("Url already exists")
 
     while (exist) {
       shortened_url = this.createRandomUrl(this.shortUrlLength)
@@ -42,8 +38,6 @@ export class RedirectsService {
         },
       }) > 0
     }
-
-
 
     const expire_at = DateTime.local().plus(Duration.fromObject({ minutes: 30 }))
     await this.prisma.redirects.create({
