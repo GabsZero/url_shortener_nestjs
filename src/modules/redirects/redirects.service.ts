@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/repositories/prisma.service';
 import { DateTime, Duration } from "luxon";
+import { CreateCustomShortUrlDto } from './createCustomShortUrl';
 
 @Injectable()
 export class RedirectsService {
@@ -42,6 +43,8 @@ export class RedirectsService {
       }) > 0
     }
 
+
+
     const expire_at = DateTime.local().plus(Duration.fromObject({ minutes: 30 }))
     await this.prisma.redirects.create({
       data: {
@@ -53,6 +56,29 @@ export class RedirectsService {
     })
 
     return shortened_url
+  }
+
+  async createCustomShortUrl(createCustomUrlDto: CreateCustomShortUrlDto): Promise<string> {
+    const urlExists = await this.prisma.redirects.count({
+      where: {
+        shortened_url: createCustomUrlDto.short
+      }
+    }) > 0
+
+    if (urlExists) throw new BadRequestException("Short is already in use")
+
+    const expire_at = DateTime.local().plus(Duration.fromObject({ days: 7 }))
+
+    await this.prisma.redirects.create({
+      data: {
+        original_url: createCustomUrlDto.url,
+        shortened_url: createCustomUrlDto.short,
+        redirects_count: 0,
+        expire_at: expire_at
+      }
+    })
+
+    return createCustomUrlDto.short
   }
 
   createRandomUrl(length: number) {
