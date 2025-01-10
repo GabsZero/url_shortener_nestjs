@@ -53,13 +53,13 @@ export class RedirectsService {
   }
 
   async createCustomShortUrl(createCustomUrlDto: CreateCustomShortUrlDto): Promise<string> {
-    const urlExists = await this.prisma.redirects.count({
+    const shortUrlExists = await this.prisma.redirects.count({
       where: {
         shortened_url: createCustomUrlDto.short
       }
     }) > 0
 
-    if (urlExists) throw new BadRequestException("Short is already in use")
+    if (shortUrlExists) throw new BadRequestException("Short is already in use")
 
     const expire_at = DateTime.local().plus(Duration.fromObject({ days: 7 }))
 
